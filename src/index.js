@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
-import { MenuScraperScheduler } from './scheduler.js';
-import { Logger } from './logger.js';
+import { MenuScraperScheduler } from "./scheduler.js";
+import { Logger } from "./logger.js";
 
 const logger = new Logger();
 
 async function main() {
   const args = process.argv.slice(2);
-  const command = args[0] || 'start';
+  const command = args[0] || "start";
 
   const scheduler = new MenuScraperScheduler();
   global.schedulerInstance = scheduler;
@@ -16,41 +16,43 @@ async function main() {
     await scheduler.initialize();
 
     switch (command) {
-      case 'start':
-        logger.info('Starting Bistro Scraper in scheduled mode');
+      case "start":
+        logger.info("Starting Bistro Scraper in scheduled mode");
         scheduler.start();
-        
-        logger.info('Scheduler is running. Press Ctrl+C to stop.');
-        logger.info(`Status: ${JSON.stringify(scheduler.getStatus(), null, 2)}`);
-        
+
+        logger.info("Scheduler is running. Press Ctrl+C to stop.");
+        logger.info(
+          `Status: ${JSON.stringify(scheduler.getStatus(), null, 2)}`
+        );
+
         process.stdin.resume();
         break;
 
-      case 'run-once':
-        logger.info('Running Bistro Scraper once');
+      case "run-once":
+        logger.info("Running Bistro Scraper once");
         await scheduler.runOnce();
         await scheduler.shutdown();
         break;
 
-      case 'test-webhook':
-        logger.info('Testing Discord webhook');
+      case "test-webhook":
+        logger.info("Testing Discord webhook");
         const success = await scheduler.testWebhook();
         if (success) {
-          logger.info('Webhook test successful');
+          logger.info("Webhook test successful");
         } else {
-          logger.error('Webhook test failed');
+          logger.error("Webhook test failed");
           process.exit(1);
         }
         await scheduler.shutdown();
         break;
 
-      case 'status':
+      case "status":
         const status = scheduler.getStatus();
         console.log(JSON.stringify(status, null, 2));
         await scheduler.shutdown();
         break;
 
-      case 'help':
+      case "help":
         showHelp();
         await scheduler.shutdown();
         break;
@@ -60,9 +62,8 @@ async function main() {
         showHelp();
         process.exit(1);
     }
-
   } catch (error) {
-    logger.error('Application failed to start:', error);
+    logger.error("Application failed to start:", error);
     process.exit(1);
   }
 }
@@ -94,8 +95,7 @@ Examples:
   `);
 }
 
-// Run main function when file is executed directly
-main().catch(error => {
-  console.error('Unhandled error in main:', error);
+main().catch((error) => {
+  console.error("Unhandled error in main:", error);
   process.exit(1);
 });

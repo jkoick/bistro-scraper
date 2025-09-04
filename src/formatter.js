@@ -1,4 +1,4 @@
-import { Config } from './config.js';
+import { Config } from "./config.js";
 
 export class MenuFormatter {
   constructor() {
@@ -48,10 +48,10 @@ export class MenuFormatter {
       messages.push({
         embeds: [
           {
-            title: `🟠 ${name} - daily menu`,
+            title: `${restaurantEmoji} ${name} - daily menu`,
             description: "No daily menu available today",
             url: url,
-            color: 0xff9500, // Orange color for no menu available
+            color: 0xff9500,
             timestamp: new Date().toISOString(),
           },
         ],
@@ -61,10 +61,8 @@ export class MenuFormatter {
 
     const restaurantEmoji = this.getRestaurantEmoji(name);
     const embed = {
-      // Title includes "- daily menu" and keeps the URL for clickability
       title: `${restaurantEmoji} ${name} - daily menu`,
       url: url,
-      // Keep ONLY the item count in the description
       description: `${menuData.items.length} items available`,
       color: this.getRestaurantColor(name),
       timestamp: new Date().toISOString(),
@@ -74,8 +72,6 @@ export class MenuFormatter {
       },
     };
 
-    // Do NOT replace description with categories anymore
-
     const groupedItems = this.groupItemsByCategory(
       menuData.items,
       menuData.categories
@@ -84,7 +80,6 @@ export class MenuFormatter {
     let currentFieldLength = 0;
 
     for (const [category, items] of Object.entries(groupedItems)) {
-      // Hide the old "🍽️ Daily Menu" header by using a zero-width space
       const categoryTitle = category === "uncategorized" ? "\u200b" : category;
 
       const itemsText = items.map((item) => this.formatMenuItem(item)).join("");
@@ -174,7 +169,7 @@ export class MenuFormatter {
         {
           title: "🔴 Scraping Errors",
           description: errorList,
-          color: 0xff0000, // Red color for scraping errors
+          color: 0xff0000,
           timestamp: new Date().toISOString(),
         },
       ],
@@ -193,7 +188,9 @@ export class MenuFormatter {
       default: 0x3498db,
     };
     const colorValue = colors[name] || colors.default;
-    return typeof colorValue === 'string' ? parseInt(colorValue, 16) : colorValue;
+    return typeof colorValue === "string"
+      ? parseInt(colorValue, 16)
+      : colorValue;
   }
 
   formatLogSummary(scrapingResults) {
