@@ -1,18 +1,18 @@
 # Bistro Scraper 🍽️
 
-An automated web scraper that monitors local food ordering sites and sends daily menu updates to Discord via webhook. Built with Playwright MCP to bypass bot protection.
+An automated web scraper that monitors Slovak restaurant websites and sends daily menu updates to Discord via webhook. Uses Playwright for screenshot-based scraping with intelligent daily menu detection.
 
 ## Features
 
-- 🕐 **Scheduled Scraping**: Runs automatically before lunch time (configurable)
-- 🤖 **Bot Protection Bypass**: Uses Playwright MCP to handle dynamic content and bot detection
-- 📱 **Discord Integration**: Sends formatted menu updates to Discord channels via webhooks
-- 🔧 **Flexible Configuration**: Easy JSON-based configuration for multiple sites
-- 📸 **Screenshot Support**: Optional screenshot capture for debugging
-- 🪵 **Comprehensive Logging**: Detailed logs with automatic cleanup
-- 🔄 **Error Handling**: Retry logic and error notifications
-- ⚡ **Multiple Run Modes**: Scheduled, one-time, and test modes
-- 🖼️ **Screenshot-Based Extraction**: New AI-ready approach using visual analysis instead of fragile CSS selectors
+- 🕐 **Scheduled Scraping**: Automated runs with cron-based scheduling
+- 🖼️ **Screenshot-Based Scraping**: Progressive screenshots with DOM analysis for reliable extraction
+- 🎯 **Smart Daily Menu Detection**: Only extracts items from "Denné menu [day]" sections
+- 📱 **Discord Integration**: Color-coded status messages with formatted menu updates
+- 🔧 **Flexible Configuration**: JSON-based restaurant and global settings
+- 📸 **Debug Screenshots**: Visual debugging for failed scrapes
+- 🪵 **Comprehensive Logging**: Daily rotated logs with detailed error tracking
+- 🔄 **Resilient Error Handling**: Retry logic and graceful degradation
+- 🍪 **Cookie Banner Handling**: Custom scripts for site-specific interactions
 
 ## Quick Start
 
@@ -25,49 +25,61 @@ npm install
 ### 2. Configuration
 
 Copy the example environment file:
+
 ```bash
 cp .env.example .env
 ```
 
 Edit `.env` and set your Discord webhook URL:
+
 ```env
 DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN
 ```
 
 ### 3. Configure Sites
 
-Edit `config/sites.json` to add your local food ordering sites:
+Edit `config/sites.json` to add your restaurants:
 
 ```json
 {
   "sites": [
     {
+      "id": "local-bistro",
       "name": "Local Bistro",
       "url": "https://localbistro.com/menu",
       "enabled": true,
-      "selectors": {
-        "menuItems": ".menu-item",
-        "itemName": ".item-title",
-        "itemPrice": ".price",
-        "itemDescription": ".description"
-      },
-      "waitForSelector": ".menu-container",
-      "screenshots": true
+      "cookieScript": "await page.click('.accept-cookies');",
+      "emoji": "🍽️",
+      "color": "#3498db"
     }
-  ]
+  ],
+  "settings": {
+    "timeout": 30000,
+    "retryAttempts": 3,
+    "screenshotPath": "./screenshots",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+  }
 }
 ```
 
 ### 4. Test Setup
 
 Test your Discord webhook:
+
 ```bash
-npm start test-webhook
+node src/index.js test-webhook
 ```
 
 Run a one-time scrape:
+
 ```bash
 npm run scrape
+```
+
+Test screenshot scraper:
+
+```bash
+npm run test-screenshot
 ```
 
 ### 5. Start Scheduled Mode
@@ -84,10 +96,10 @@ npm start
 # Start scheduler (runs continuously)
 npm start
 
-# Run scraping once and exit  
+# Run scraping once and exit
 npm run scrape
 
-# Test new screenshot-based scraper
+# Test screenshot-based scraper
 npm run test-screenshot
 
 # Test Discord webhook
@@ -96,7 +108,7 @@ node src/index.js test-webhook
 # Check configuration status
 node src/index.js status
 
-# Show help
+# Show available commands
 node src/index.js help
 ```
 
@@ -104,60 +116,38 @@ node src/index.js help
 
 Each site in `config/sites.json` supports:
 
-- **name**: Display name for the restaurant
-- **url**: URL to scrape
+- **id**: Unique restaurant identifier
+- **name**: Display name for Discord messages
+- **url**: Restaurant menu URL to scrape
 - **enabled**: Whether to include in scraping runs
-- **selectors**: CSS selectors for menu elements
-- **waitForSelector**: Element to wait for before scraping
-- **screenshots**: Whether to take screenshots
-- **customScript**: Custom JavaScript to run on the page
-- **timeout**: Page timeout in milliseconds
+- **cookieScript**: JavaScript for cookie banner handling
+- **emoji**: Discord message emoji
+- **color**: Discord embed color (hex format)
 
-### CSS Selectors
+### Global Configuration
 
-Configure these selectors to match the target site:
+Global settings control scraper behavior:
 
-- `menuItems`: Container for each menu item
-- `itemName`: Menu item name/title
-- `itemPrice`: Price element
-- `itemDescription`: Description text
-- `category`: Menu category headers
+- **timeout**: Page load timeout in milliseconds
+- **retryAttempts**: Number of retry attempts for failed sites
+- **screenshotPath**: Directory for debug screenshots
+- **userAgent**: Browser user agent string
 
-### Example Site Configurations
+### Daily Menu Detection
 
-**Basic Configuration:**
-```json
-{
-  "name": "Simple Menu Site",
-  "url": "https://restaurant.com/menu",
-  "enabled": true,
-  "selectors": {
-    "menuItems": ".menu-item",
-    "itemName": "h3",
-    "itemPrice": ".price"
-  },
-  "waitForSelector": ".menu"
-}
-```
+The scraper specifically looks for sections containing:
 
-**Advanced Configuration with Custom Script:**
-```json
-{
-  "name": "Protected Site",
-  "url": "https://delivery-site.com/daily-menu",
-  "enabled": true,
-  "selectors": {
-    "menuItems": "[data-testid='menu-item']",
-    "itemName": ".item-name",
-    "itemPrice": ".item-price",
-    "itemDescription": ".item-desc"
-  },
-  "waitForSelector": "[data-testid='menu-loaded']",
-  "customScript": "await page.click('.accept-cookies'); await page.waitForTimeout(1000); await page.click('.show-menu');",
-  "screenshots": true,
-  "timeout": 45000
-}
-```
+- "Denné menu [day]" patterns in Slovak
+- Ignores non-daily sections like "Obľúbené" or "Burger Central"
+- Only extracts items from confirmed daily menu sections
+
+### Discord Status Messages
+
+Color-coded status messages:
+
+- 🟠 **Orange**: "No daily menu available today"
+- 🔴 **Red**: "Scraping Errors" (site failures)
+- ✅ **Normal**: Menu items successfully found
 
 ## Environment Variables
 
@@ -167,8 +157,6 @@ DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
 
 # Optional
 SCRAPE_SCHEDULE=30 11 * * 1-5  # 11:30 AM weekdays
-PAGE_TIMEOUT=30000             # 30 second timeout
-USER_AGENT=Mozilla/5.0...      # Custom user agent
 DEBUG=true                     # Enable debug logging
 ```
 
@@ -181,9 +169,10 @@ DEBUG=true                     # Enable debug logging
 
 ## Scheduling
 
-Default schedule is 11:30 AM on weekdays (`30 11 * * 1-5`). 
+Default schedule is 11:30 AM on weekdays (`30 11 * * 1-5`).
 
 Cron format: `minute hour day month dayOfWeek`
+
 - `0 12 * * *` - Daily at noon
 - `30 11 * * 1-5` - 11:30 AM weekdays only
 - `0 11,17 * * 1-5` - 11 AM and 5 PM weekdays
@@ -193,98 +182,83 @@ Cron format: `minute hour day month dayOfWeek`
 ### Common Issues
 
 **Sites returning 403/bot detection:**
-- Sites are using Playwright which mimics real browsers
-- Try adjusting the `userAgent` in config
-- Add delays with `customScript`: `await page.waitForTimeout(3000);`
-- Enable screenshots to see what the scraper sees
 
-**No menu items found:**
-- Check CSS selectors match the site structure
-- Use browser dev tools to inspect elements
-- Enable screenshots to debug
-- Try the site in a real browser first
+- Scraper uses Playwright with stealth configurations
+- Adjust `userAgent` in global config if needed
+- Add delays in `cookieScript`: `await page.waitForTimeout(3000);`
+
+**No daily menu found:**
+
+- Scraper only detects "Denné menu [day]" sections
+- Check if restaurant uses different daily menu patterns
+- Review screenshots in `./screenshots/` directory
+- Verify site loads correctly in normal browser
 
 **Discord messages not sending:**
-- Verify webhook URL format
-- Test with `npm start test-webhook`
+
+- Verify webhook URL format in `.env`
+- Test with `node src/index.js test-webhook`
 - Check Discord server permissions
 - Review logs in `./logs/` directory
 
 ### Debugging
 
 Enable debug mode:
+
 ```env
 DEBUG=true
 ```
 
-Check logs:
+Check daily logs:
+
 ```bash
 tail -f logs/scraper_$(date +%Y-%m-%d).log
 ```
 
-Take screenshots:
-```json
-{
-  "screenshots": true,
-  "screenshotPath": "./debug-screenshots"
-}
-```
+Screenshots are automatically saved to `./screenshots/` for failed scrapes.
 
 ## Screenshot-Based Scraping 🖼️
 
-We've introduced a new screenshot-based approach that's more reliable than CSS selectors:
-
-### Why Screenshot-Based?
-
-- **Future-Proof**: Works regardless of HTML structure changes
-- **Visual Accuracy**: Captures exactly what users see
-- **AI-Ready**: Screenshots can be analyzed by vision models
-- **Reduced Maintenance**: No need to update complex selectors when sites change
-- **Manual Review**: Screenshots provide visual confirmation of scraping
-
-### Usage
-
-```bash
-# Test the screenshot scraper
-npm run test-screenshot
-```
+The scraper uses a progressive screenshot approach combined with intelligent DOM analysis:
 
 ### How It Works
 
 1. **Navigate**: Goes to the restaurant website
-2. **Handle Cookies**: Executes custom scripts (like cookie acceptance)
-3. **Wait**: Waits for content to load
-4. **Capture**: Takes full-page screenshot
-5. **Extract**: Uses DOM parsing as fallback, ready for AI integration
-6. **Save**: Stores screenshots for manual review or AI analysis
+2. **Handle Cookies**: Executes site-specific cookie scripts
+3. **Progressive Capture**: Takes screenshots while analyzing DOM structure
+4. **Smart Detection**: Identifies "Denné menu [day]" sections specifically
+5. **Extract**: Pulls menu items only from daily menu sections
+6. **Debug**: Saves screenshots for failed scrapes
 
-### AI Integration Ready
+### Key Benefits
 
-The screenshot approach is designed for future integration with:
-- OpenAI Vision API
-- Google Cloud Vision
-- Azure Computer Vision
-- Custom ML models
+- **Reliable Daily Menu Detection**: Focuses only on current day's offerings
+- **Visual Debugging**: Screenshots show exactly what the scraper sees
+- **Slovak Restaurant Optimized**: Handles local site patterns and cookie banners
+- **Resilient**: Works despite HTML structure changes
+- **Selective Extraction**: Ignores popular items, favorites, and permanent menu sections
 
-Screenshots are saved in `./screenshots/` directory for analysis.
+Test the scraper:
+
+```bash
+npm run test-screenshot
+```
 
 ## File Structure
 
 ```
 ├── src/
-│   ├── index.js              # Main entry point
-│   ├── scheduler.js          # Scheduling logic
-│   ├── scraper.js            # Web scraping with Playwright
-│   ├── screenshot-scraper.js # NEW: Screenshot-based scraper
-│   ├── formatter.js          # Discord message formatting
+│   ├── index.js              # Main entry point and CLI commands
+│   ├── scheduler.js          # Cron-based job scheduling
+│   ├── screenshot-scraper.js # Primary screenshot-based scraper
 │   ├── discord.js            # Discord webhook integration
-│   ├── config.js             # Configuration management
-│   └── logger.js             # Logging system
+│   ├── formatter.js          # Discord message formatting with status colors
+│   ├── config.js             # Configuration management for sites and globals
+│   └── logger.js             # File and console logging with daily rotation
 ├── config/
-│   └── sites.json            # Site configurations
-├── logs/                     # Generated log files
-├── screenshots/              # Generated screenshots
-├── test-screenshot-scraper.js # Screenshot scraper test
+│   └── sites.json            # Restaurant configurations and global settings
+├── logs/                     # Daily rotated log files
+├── screenshots/              # Debug screenshots for failed scrapes
 └── .env                      # Environment variables
 ```
 
