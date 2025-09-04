@@ -1,0 +1,25 @@
+{
+  "name": "bistro-scraper",
+  "version": "1.0.0",
+  "description": "Web scraper for local food ordering sites with Discord webhook integration",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "/usr/local/bin/node src/index.js",
+    "dev": "/usr/local/bin/node --watch src/index.js",
+    "scrape": "/usr/local/bin/node src/index.js run-once",
+    "test-screenshot": "/usr/local/bin/node test-screenshot-scraper.js"
+  },
+  "dependencies": {
+    "node-cron": "^3.0.3",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.40.0",
+    "@types/node": "^20.10.0"
+  },
+  "keywords": ["scraper", "food", "discord", "playwright", "mcp"],
+  "author": "",
+  "license": "MIT"
+}

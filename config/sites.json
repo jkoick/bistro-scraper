@@ -1,0 +1,41 @@
+{
+  "sites": [
+    {
+      "id": "moj-brgr",
+      "name": "Môj BRGR",
+      "url": "https://www.bistro.sk/restauracia/moj-brgr",
+      "enabled": true,
+      "cookieScript": "try { await page.click('button:has-text(\"Prijať všetko\")', {timeout: 5000}); await page.waitForTimeout(2000); } catch(e) { console.log('No cookie banner found'); }",
+      "emoji": "🍔",
+      "color": "0x3498db"
+    },
+    {
+      "id": "vinh-bistro",
+      "name": "Vinh Bistro",
+      "url": "https://www.bistro.sk/restauracia/vinh-bistro",
+      "enabled": true,
+      "cookieScript": "try { await page.click('button:has-text(\"Prijať všetko\")', {timeout: 5000}); await page.waitForTimeout(2000); } catch(e) { console.log('No cookie banner found'); }",
+      "emoji": "🍜",
+      "color": "0x3498db"
+    },
+    {
+      "id": "central-pub",
+      "name": "Centrál Pub",
+      "url": "https://www.bistro.sk/restauracia/central-pub",
+      "enabled": true,
+      "cookieScript": "try { await page.click('button:has-text(\"Prijať všetko\")', {timeout: 5000}); await page.waitForTimeout(2000); await page.waitForSelector('h2', {timeout: 3000}); } catch(e) { console.log('No cookie banner found'); }",
+      "emoji": "🍻",
+      "color": "0x3498db"
+    }
+  ],
+  "settings": {
+    "timeout": 30000,
+    "retryAttempts": 3,
+    "screenshotPath": "./screenshots",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "defaults": {
+      "emoji": "🏪",
+      "color": "0x3498db"
+    }
+  }
+}
